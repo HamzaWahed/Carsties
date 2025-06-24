@@ -1,7 +1,10 @@
 using System.Net;
+using MassTransit;
 using Polly;
 using Polly.Extensions.Http;
+using SearchService.Consumers;
 using SearchService.Data;
+using SearchService.RequestHelpers;
 using SearchService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +15,23 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddHttpClient<AuctionServiceHttpClient>().AddPolicyHandler(GetPolicy());
+builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumer<AuctionCreatedConsumer>();
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
+    
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        cfg.Host("localhost", "/", h =>
+        {
+            h.Username("user");
+            h.Password("1234");
+        });
+        
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 var app = builder.Build();
 
