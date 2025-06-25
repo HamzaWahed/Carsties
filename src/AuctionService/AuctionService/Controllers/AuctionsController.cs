@@ -49,6 +49,8 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         auction.Seller = "test";
 
         db.Auctions.Add(auction);
+        var auctionDto = mapper.Map<AuctionDto>(auction);
+        await publishEndpoint.Publish(mapper.Map<AuctionCreated>(auctionDto));
         var result = await db.SaveChangesAsync() > 0;
 
         if (!result)
@@ -56,9 +58,6 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
             return BadRequest("Could not save changes to the database.");
         }
 
-        var auctionDto = mapper.Map<AuctionDto>(auction);
-        await publishEndpoint.Publish(mapper.Map<AuctionCreated>(auctionDto));
-        
         return CreatedAtAction(
             nameof(Get),
             new { id = auction.Id },

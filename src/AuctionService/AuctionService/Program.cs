@@ -13,6 +13,13 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddMassTransit(x =>
 {
+    x.AddEntityFrameworkOutbox<AppDbContext>(opts =>
+    {
+        opts.QueryDelay = TimeSpan.FromSeconds(10);
+        opts.UsePostgres();
+        opts.UseBusOutbox();
+    });
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/", h =>
