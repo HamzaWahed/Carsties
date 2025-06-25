@@ -93,6 +93,11 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         }
 
         db.Auctions.Remove(auction);
+        await publishEndpoint.Publish(new AuctionDeleted()
+        {
+            Id = id.ToString()
+        });
+        
         var result = await db.SaveChangesAsync() > 0;
         return !result ? Results.BadRequest("Could not save changes to the database") : Results.Ok();
     }

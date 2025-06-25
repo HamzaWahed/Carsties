@@ -19,6 +19,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<AuctionCreatedConsumer>();
+    x.AddConsumer<AuctionDeletedConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
     
     x.UsingRabbitMq((context, cfg) =>
