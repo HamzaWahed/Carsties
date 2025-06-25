@@ -78,6 +78,12 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         }
 
         mapper.Map(updateAuctionDto, auction);
+
+        var updatedAuctionMessage = mapper.Map<AuctionUpdated>(updateAuctionDto);
+        updatedAuctionMessage.Id = id.ToString();
+
+        await publishEndpoint.Publish(updatedAuctionMessage);
+
         var result = await db.SaveChangesAsync() > 0;
 
         return !result ? Results.BadRequest("Update failed or no changes were provided.") : Results.Ok();
@@ -97,7 +103,7 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         {
             Id = id.ToString()
         });
-        
+
         var result = await db.SaveChangesAsync() > 0;
         return !result ? Results.BadRequest("Could not save changes to the database") : Results.Ok();
     }

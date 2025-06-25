@@ -19,5 +19,6 @@ public class AuctionProfile: AutoMapper.Profile
         CreateMap<UpdateAuctionDto, Item>()
             .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         CreateMap<AuctionDto, AuctionCreated>();
+        CreateMap<UpdateAuctionDto, AuctionUpdated>();
     }
 }
