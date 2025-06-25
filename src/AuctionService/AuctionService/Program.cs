@@ -1,4 +1,5 @@
 using AuctionService;
+using AuctionService.Consumers;
 using AuctionService.Profiles;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,9 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddMassTransit(x =>
 {
+    x.AddConsumer<AuctionCreatedFaultConsumer>();
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("auction", false));
+    
     x.AddEntityFrameworkOutbox<AppDbContext>(opts =>
     {
         opts.QueryDelay = TimeSpan.FromSeconds(10);
