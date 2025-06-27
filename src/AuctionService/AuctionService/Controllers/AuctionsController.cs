@@ -4,6 +4,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -41,12 +42,12 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         return TypedResults.Ok(auctionDto);
     }
 
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] CreateAuctionDto createAuctionDto)
     {
         var auction = mapper.Map<Auction>(createAuctionDto);
-        //TODO: add the current user as seller
-        auction.Seller = "test";
+        auction.Seller = User.Identity.Name;
 
         db.Auctions.Add(auction);
         var auctionDto = mapper.Map<AuctionDto>(auction);
@@ -65,6 +66,7 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         );
     }
 
+    [Authorize]
     [HttpPut("{id:Guid}")]
     public async Task<IResult> Put(Guid id, [FromBody] UpdateAuctionDto updateAuctionDto)
     {
@@ -75,6 +77,11 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         if (auction == null)
         {
             return Results.NotFound($"Auction with id {id} does not exist.");
+        }
+
+        if (auction.Seller != User.Identity.Name)
+        {
+            return Results.Forbid();
         }
 
         mapper.Map(updateAuctionDto, auction);
@@ -89,6 +96,7 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         return !result ? Results.BadRequest("Update failed or no changes were provided.") : Results.Ok();
     }
 
+    [Authorize]
     [HttpDelete("{id:Guid}")]
     public async Task<IResult> Delete(Guid id)
     {
@@ -96,6 +104,11 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
         if (auction == null)
         {
             return Results.NotFound($"Auction with id {id} does not exist.");
+        }
+
+        if (auction.Seller != User.Identity.Name)
+        {
+            return Results.Forbid();
         }
 
         db.Auctions.Remove(auction);
