@@ -39,6 +39,16 @@ internal static class HostingExtensions
             opts.Cookie.SameSite = SameSiteMode.Lax;
         });
 
+        builder.Services.AddCors(opts =>
+        {
+            opts.AddPolicy("AllowSelf", corsPolicyBuilder =>
+            {
+                corsPolicyBuilder.WithOrigins("http://localhost:5001")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
         builder.Services.AddAuthentication();
 
         return builder.Build();
@@ -56,10 +66,12 @@ internal static class HostingExtensions
         app.UseStaticFiles();
         app.UseRouting();
         app.UseIdentityServer();
+        app.UseCors("AllowSelf");
         app.UseAuthorization();
 
         app.MapRazorPages()
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .RequireCors("AllowSelf");
 
         return app;
     }
