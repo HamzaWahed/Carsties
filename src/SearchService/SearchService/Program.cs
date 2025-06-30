@@ -18,11 +18,9 @@ builder.Services.AddHttpClient<AuctionServiceHttpClient>().AddPolicyHandler(GetP
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<AuctionCreatedConsumer>();
-    x.AddConsumer<AuctionDeletedConsumer>();
-    x.AddConsumer<AuctionUpdatedConsumer>();
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("search", false));
-    
+
     x.UsingRabbitMq((context, cfg) =>
     {
         cfg.Host("localhost", "/", h =>
@@ -30,25 +28,25 @@ builder.Services.AddMassTransit(x =>
             h.Username("user");
             h.Password("1234");
         });
-        
+
         cfg.ReceiveEndpoint("search-auction-created", e =>
         {
             e.UseMessageRetry(r => r.Interval(5, 5));
             e.ConfigureConsumer<AuctionCreatedConsumer>(context);
         });
-        
+
         cfg.ReceiveEndpoint("search-auction-deleted", e =>
         {
             e.UseMessageRetry(r => r.Interval(5, 5));
             e.ConfigureConsumer<AuctionDeletedConsumer>(context);
         });
-        
+
         cfg.ReceiveEndpoint("search-auction-updated", e =>
         {
             e.UseMessageRetry(r => r.Interval(5, 5));
             e.ConfigureConsumer<AuctionUpdatedConsumer>(context);
         });
-        
+
         cfg.ConfigureEndpoints(context);
     });
 });
