@@ -15,7 +15,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddMassTransit(x =>
 {
-    x.AddConsumer<AuctionCreatedFaultConsumer>();
+    x.AddConsumersFromNamespaceContaining<AuctionCreatedFaultConsumer>();
     x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("auction", false));
 
     x.AddEntityFrameworkOutbox<AppDbContext>(opts =>
