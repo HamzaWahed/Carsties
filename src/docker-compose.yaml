@@ -28,12 +28,22 @@ services:
       - "5672:5672"
   auction-service:
     image: hzd454/auction-service
+    depends_on:
+      - postgres
+      - rabbitmq
     ports:
       - "80:7001"
   search-service:
     image: hzd454/search-service
+    depends_on:
+      - mongodb
+      - rabbitmq
     ports:
       - "80:7002"
+  gateway-service:
+    image: hzd454/gateway-service
+    ports:
+      - "80:3000"
 
 volumes:
   pgdata:
