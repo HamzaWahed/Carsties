@@ -27,7 +27,7 @@ services:
       - "15672:15672"
       - "5672:5672"
   auction-svc:
-    image: hzd454/auction-service:lastest
+    image: hzd454/auction-service:latest
     build:
       context: .
       dockerfile: src/AuctionService/AuctionService/Dockerfile
