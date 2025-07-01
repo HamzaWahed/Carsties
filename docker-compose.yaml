@@ -42,6 +42,23 @@ services:
       - rabbitmq
     ports:
       - "7001:80"
+  search-svc:
+    image: hzd454/search-service:latest
+    build:
+      context: .
+      dockerfile: src/SearchService/SearchService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - RabbitMq__Host=rabbitmq
+      - ConnectionStrings__DefaultConnection=mongodb://root:1234@mongodb:27017
+      - IdentityServiceUrl=http://identity-svc
+      - AuctionServiceUrl=http://auction-svc
+    depends_on:
+      - mongodb
+      - rabbitmq
+    ports:
+      - "7002:80"
 
 volumes:
   pgdata:
