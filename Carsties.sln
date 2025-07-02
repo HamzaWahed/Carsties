@@ -1,9 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-	ProjectSection(SolutionItems) = preProject
-		src\docker-compose.yaml = src\docker-compose.yaml
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AuctionService", "AuctionService", "{2A4404BB-49CE-31F7-A0D2-FEE84F899EB4}"
 EndProject
@@ -18,6 +15,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentityService", "src\IdentityService\IdentityService.csproj", "{1A971DC6-E41D-4375-93D3-CCC0D20E2C3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayService", "src\GatewayService\GatewayService.csproj", "{064BB04F-28BA-43E1-AEFD-873A2A04E631}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuctionService.UnitTests", "tests\AuctionService.UnitTests\AuctionService.UnitTests.csproj", "{998C4D52-C596-48FB-B094-1EE4D35EB82C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,6 +90,18 @@ Global
 		{064BB04F-28BA-43E1-AEFD-873A2A04E631}.Release|x64.Build.0 = Release|Any CPU
 		{064BB04F-28BA-43E1-AEFD-873A2A04E631}.Release|x86.ActiveCfg = Release|Any CPU
 		{064BB04F-28BA-43E1-AEFD-873A2A04E631}.Release|x86.Build.0 = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|x64.Build.0 = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Debug|x86.Build.0 = Debug|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|x64.ActiveCfg = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|x64.Build.0 = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|x86.ActiveCfg = Release|Any CPU
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -101,5 +114,6 @@ Global
 		{5C551596-89E2-4011-93BA-801FD3B002B4} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1A971DC6-E41D-4375-93D3-CCC0D20E2C3B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{064BB04F-28BA-43E1-AEFD-873A2A04E631} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{998C4D52-C596-48FB-B094-1EE4D35EB82C} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

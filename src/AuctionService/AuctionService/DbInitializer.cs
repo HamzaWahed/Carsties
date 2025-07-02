@@ -11,7 +11,7 @@ public class DbInitializer
         SeedData(scope.ServiceProvider.GetService<AppDbContext>());
     }
 
-    private static void SeedData(AppDbContext? context)
+    private static void SeedData(AppDbContext context)
     {
         if (context == null) return;
         
