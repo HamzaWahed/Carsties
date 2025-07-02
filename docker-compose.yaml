@@ -72,7 +72,16 @@ services:
       - postgres
     ports:
       - "5001:80"
-
+  gateway-svc:
+    image: hzd454/gatway-service:latest
+    build:
+      context: .
+      dockerfile: src/GatewayService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "6001:80"
 volumes:
   pgdata:
   mongodata:

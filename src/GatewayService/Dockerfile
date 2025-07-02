@@ -5,11 +5,11 @@ ARG BUILD_CONFIGURATION=Release
 COPY Carsties.sln ./
 COPY src/GatewayService/GatewayService.csproj src/GatewayService/
 
-RUN dotnet restore "./src/GatewayService/GatewayService.csproj"
+RUN dotnet restore "src/GatewayService/GatewayService.csproj"
 
 COPY . .
 
-RUN dotnet publish "./src/GatewayService/GatewayService.csproj" -c $BUILD_CONFIGURATION -o /app/publish
+RUN dotnet publish "src/GatewayService/GatewayService.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
