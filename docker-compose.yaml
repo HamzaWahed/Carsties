@@ -59,6 +59,19 @@ services:
       - rabbitmq
     ports:
       - "7002:80"
+  identity-svc:
+    image: hzd454/identity-service:latest
+    build:
+      context: .
+      dockerfile: src/IdentityService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Username=postgres;Password=1234;Database=identity
+    depends_on:
+      - postgres
+    ports:
+      - "5001:80"
 
 volumes:
   pgdata:
