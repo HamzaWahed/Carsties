@@ -1,5 +1,6 @@
 using AuctionService;
 using AuctionService.Consumers;
+using AuctionService.Data;
 using AuctionService.Profiles;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -39,6 +40,19 @@ builder.Services.AddMassTransit(x =>
 
 var connString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connString));
+
+// ReSharper disable once InvalidXmlDocComment
+/**
+ * DbContext is a Scoped service, therefore, you should also make the repository a scoped service as well. Using
+ * Singleton turns the scope of DbContext to singleton as well (called captive dependency), which will throw an error.
+ * The DbContext is no longer thread-safe, as different requests will attempt to write to the same DbContext instance
+ * (concurrent writes).
+ *
+ * Using Transient for repository is thread-safe (unless DbContext is also transient) as the same DbContext is passed
+ * to each repository instance in the same HTTP request scope, but it's not the most memory efficient.
+ */
+builder.Services.AddScoped<IAuctionRepository, AuctionRepository>();
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

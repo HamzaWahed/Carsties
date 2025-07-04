@@ -1,66 +1,108 @@
+using AuctionService.Data;
 using AuctionService.Models;
 using AuctionService.Models.Dtos;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace AuctionService.Controllers;
 
 [Route("api/auctions")]
 [ApiController]
-public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoint publishEndpoint) : ControllerBase
+public class AuctionsController(IAuctionRepository context, IMapper mapper, IPublishEndpoint publishEndpoint)
+    : ControllerBase
 {
+    /**
+     * This method does not explicitly state that the return type is Ok(AuctionDto). You should annotate
+     * the return type to be successful return type in the body that the client expects (in this case, AuctionDto).
+     * ASP.NET Core implicitly creates a Task<OkObjectResult> in this case.
+     *
+     * Why?
+     * Task<ActionResult<List<AuctionDto>>> tells clients (e.g. OpenAPI spec or frontend app) that the response body
+     * contains a List<AuctionDto> type. ASP.NET Core implicitly converts it into a OkObjectResult type, which is simply
+     * the data (i.e., List<AuctionDto>) and the 200 status code. This is then converted to an appropriate response type
+     * before it leaves the pipeline.
+     * For example:
+     * HTTP/1.1 200 OK
+        Content-Type: application/json; charset=utf-8
+        Content-Length: 1234
+
+        [
+          {
+            "id": "some-guid-1",
+            "auctionEnd": "2025-07-10T20:00:00Z",
+            "itemName": "Vintage Painting"
+          },
+          {
+            "id": "some-guid-2",
+            "auctionEnd": "2025-07-11T18:30:00Z",
+            "itemName": "Antique Chair"
+          }
+        ]
+     */
     [HttpGet]
     public async Task<ActionResult<List<AuctionDto>>> Get(string? date)
     {
-        var query = db.Auctions.OrderBy(x => x.Item.Make).AsQueryable();
-
-        if (!string.IsNullOrEmpty(date))
-        {
-            query = query.Where(x => x.AuctionEnd.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
-        }
-
-        return await query.ProjectTo<AuctionDto>(mapper.ConfigurationProvider).ToListAsync();
+        return Ok(await context.GetAuctionsAsync(date));
     }
 
+    /**
+     * Use IActionResult when the return type of the function can be different types. This is more flexible, and is
+     * typically used with [ProducesResponseType] annotation. Use Action<T> to return a concrete type, like the GET
+     * method above.
+     *
+     * example:
+     * If you annotate the return type of the function below with Task<OkObjectResult>, it conflicts with the return
+     * type when the object is not found, as that has a return type of Task<NotFoundObjectResult>. Therefore,
+     * IActionResult is the best choice due to the method having different return types.
+     */
     [HttpGet("{id:Guid}")]
-    public async Task<IResult> Get(Guid id)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(AuctionDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(Guid id)
     {
-        var auction = await db.Auctions.Include(x => x.Item)
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var auctionDto = await context.GetAuctionByIdAsync(id);
 
-        if (auction == null)
+        if (auctionDto == null)
         {
-            return Results.NotFound($"Auction with id {id} does not exist.");
+            return NotFound($"Auction with id {id} does not exist.");
         }
 
-        var auctionDto = mapper.Map<AuctionDto>(auction);
-        return TypedResults.Ok(auctionDto);
+        return Ok(auctionDto);
     }
 
     [Authorize]
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AuctionDto), StatusCodes.Status201Created)]
     public async Task<IActionResult> Post([FromBody] CreateAuctionDto createAuctionDto)
     {
         var auction = mapper.Map<Auction>(createAuctionDto);
         auction.Seller = User.Identity.Name;
 
-        db.Auctions.Add(auction);
+        context.AddAuction(auction);
+
         var auctionDto = mapper.Map<AuctionDto>(auction);
+
         await publishEndpoint.Publish(mapper.Map<AuctionCreated>(auctionDto));
-        var result = await db.SaveChangesAsync() > 0;
+
+        var result = await context.SaveChangesAsync();
 
         if (!result)
         {
             return BadRequest("Could not save changes to the database.");
         }
 
+        /*
+         * CreatedAtAction is used to return a 201 response with the third argument as the response body (i.e., auctionDto).
+         * The response will include a "Location" field, where this new auction object can be retrieved from.
+         * The first parameter is the name of the target action method. The second parameter denotes the route value,
+         * so in the case below, this evaluates to the route /api/auctions/{id}.
+         */
         return CreatedAtAction(
-            nameof(Get),
+            nameof(Get), // the nameof method is used to output the name of the method (i.e. GET) as a string (i.e. "GET")
             new { id = auction.Id },
             auctionDto
         );
@@ -68,56 +110,62 @@ public class AuctionsController(AppDbContext db, IMapper mapper, IPublishEndpoin
 
     [Authorize]
     [HttpPut("{id:Guid}")]
-    public async Task<IResult> Put(Guid id, [FromBody] UpdateAuctionDto updateAuctionDto)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Put(Guid id, [FromBody] UpdateAuctionDto updateAuctionDto)
     {
-        var auction = await db.Auctions
-            .Include(x => x.Item)
-            .FirstOrDefaultAsync(x => x.Id == id);
+        var auction = await context.GetAuctionEntityById(id);
 
         if (auction == null)
         {
-            return Results.NotFound($"Auction with id {id} does not exist.");
+            return NotFound($"Auction with id {id} does not exist.");
         }
 
         if (auction.Seller != User.Identity.Name)
         {
-            return Results.Forbid();
+            return Forbid();
         }
 
         mapper.Map(updateAuctionDto, auction);
 
         var updatedAuctionMessage = mapper.Map<AuctionUpdated>(updateAuctionDto);
         updatedAuctionMessage.Id = id.ToString();
-
         await publishEndpoint.Publish(updatedAuctionMessage);
 
-        var result = await db.SaveChangesAsync() > 0;
+        var result = await context.SaveChangesAsync();
 
-        return !result ? Results.BadRequest("Update failed or no changes were provided.") : Results.Ok();
+        return !result ? BadRequest("Update failed or no changes were provided.") : Ok();
     }
 
     [Authorize]
     [HttpDelete("{id:Guid}")]
-    public async Task<IResult> Delete(Guid id)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Delete(Guid id)
     {
-        var auction = await db.Auctions.FindAsync(id);
+        var auction = await context.GetAuctionEntityById(id);
+
         if (auction == null)
         {
-            return Results.NotFound($"Auction with id {id} does not exist.");
+            return NotFound($"Auction with id {id} does not exist.");
         }
 
         if (auction.Seller != User.Identity.Name)
         {
-            return Results.Forbid();
+            return Forbid();
         }
 
-        db.Auctions.Remove(auction);
+        context.RemoveAuction(auction);
         await publishEndpoint.Publish(new AuctionDeleted()
         {
             Id = id.ToString()
         });
 
-        var result = await db.SaveChangesAsync() > 0;
-        return !result ? Results.BadRequest("Could not save changes to the database") : Results.Ok();
+        var result = await context.SaveChangesAsync();
+        return !result ? BadRequest("Could not save changes to the database") : Ok();
     }
 }
